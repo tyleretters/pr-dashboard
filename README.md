@@ -9,7 +9,7 @@ npm i -g @northern-information/pr-dashboard
 ```
 
 Requirements:
-- **Node 22 or later** — check with `node --version`
+- **Node 24.13.0** — check with `node --version`. The exact patch is pinned in `.node-version`, `.nvmrc`, and `package.json` `engines.node`; all three stay in sync. See `CLAUDE.md` for the policy.
 - **`gh` CLI** installed and authenticated — `brew install gh && gh auth login`
 
 That's it. The tool re-uses your `gh` session, so there's nothing else to configure.
