@@ -1,6 +1,9 @@
 {
-  "name": "pr-dashboard",
+  "name": "@northern-information/pr-dashboard",
   "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Live terminal dashboard for GitHub PRs — fresher than the web UI, two-tier polling, scoped by org",
   "type": "module",
   "bin": {
@@ -22,13 +25,13 @@
     "cli",
     "gh"
   ],
-  "homepage": "https://github.com/tyleretters/pr-dashboard",
+  "homepage": "https://github.com/northern-information/pr-dashboard",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tyleretters/pr-dashboard.git"
+    "url": "git+https://github.com/northern-information/pr-dashboard.git"
   },
   "bugs": {
-    "url": "https://github.com/tyleretters/pr-dashboard/issues"
+    "url": "https://github.com/northern-information/pr-dashboard/issues"
   },
   "license": "MIT",
   "author": "Tyler Etters",

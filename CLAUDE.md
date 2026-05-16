@@ -1,6 +1,6 @@
 # pr-dashboard
 
-Live terminal dashboard for GitHub PRs. TypeScript + Ink (React for the terminal). Distributed on npm; users install with `npm i -g pr-dashboard` and run `prd`.
+Live terminal dashboard for GitHub PRs. TypeScript + Ink (React for the terminal). Distributed on npm; users install with `npm i -g @northern-information/pr-dashboard` and run `prd`.
 
 ## Architecture
 
@@ -52,7 +52,7 @@ The whole project ships as TypeScript source — no build step. `tsx` is a *runt
 ## Distribution
 
 - Published to npm as `pr-dashboard`.
-- `npm i -g pr-dashboard` puts `prd` on the user's PATH.
+- `npm i -g @northern-information/pr-dashboard` puts `prd` on the user's PATH.
 - `files` in `package.json` whitelist what ships: `bin/`, `src/`, `tsconfig.json`, `README.md`. Nothing else (no tests, no configs).
 - `prepublishOnly` runs `npm run verify` so a broken publish is impossible.
 
