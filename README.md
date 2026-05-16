@@ -16,7 +16,7 @@ npm i -g @northern-information/pr-dashboard
 
 Requirements:
 
-- **Node 24.13.0** — check with `node --version`. The exact patch is pinned in `.node-version`, `.nvmrc`, and `package.json` `engines.node`; all three stay in sync. See `CLAUDE.md` for the policy.
+- **Node 22 or newer** — check with `node --version`. Anything `>=22` works at runtime (Ink 5 sets the floor). Contributors pin an exact patch via `.node-version` / `.nvmrc` for dev reproducibility; consumers only need the floor.
 - **`gh` CLI** installed and authenticated — `brew install gh && gh auth login`
 
 That's it. The tool re-uses your `gh` session, so there's nothing else to configure.
@@ -91,6 +91,10 @@ Config lives at `~/.config/pr-dashboard/config.json`. You can edit it by hand, o
 - Both lists are managed by the in-app settings panel. Editing the file by hand also works.
 
 Each scope renders as a single GitHub search query: `is:open is:pr involves:@me <user-or-org>:<key> archived:false` — meaning authored, review-requested, mentioned, or assigned.
+
+## Update notifications
+
+When a newer version is published to npm, `prd` shows a one-line banner in brand red at the bottom of the dashboard with the upgrade command. The check runs once a day in an unref'd background process, so it never blocks startup. To silence it, set `NO_UPDATE_NOTIFIER=1` in your shell environment.
 
 ## Develop
 

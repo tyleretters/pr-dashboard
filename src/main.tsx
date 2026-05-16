@@ -1,17 +1,30 @@
 import React from 'react'
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { render, Text } from 'ink'
 
 import { loadConfig } from './config/loader.ts'
 import { fetchViewerScopes } from './github/queries/orgsQuery.ts'
 import { GhAuthError, GhMissingError, verifyGhAvailable } from './auth/ghToken.ts'
+import { checkForUpdate } from './update/checker.ts'
 import { App } from './ui/App.tsx'
 
-const VERSION = '0.1.4'
+// Read name + version from package.json so both --version and the
+// update-notifier share a single source of truth — no risk of the
+// hardcoded VERSION constant drifting from package.json again.
+const here = dirname(fileURLToPath(import.meta.url))
+const pkgJsonPath = join(here, '..', 'package.json')
+const readPkg = async (): Promise<{ name: string; version: string }> => {
+  const raw = await readFile(pkgJsonPath, 'utf8')
+  return JSON.parse(raw) as { name: string; version: string }
+}
 
 const main = async (): Promise<void> => {
   const argv = process.argv.slice(2)
+  const pkg = await readPkg()
   if (argv.includes('--version') || argv.includes('-v')) {
-    process.stdout.write(`prd ${VERSION}\n`)
+    process.stdout.write(`prd ${pkg.version}\n`)
     return
   }
   if (argv.includes('--help') || argv.includes('-h')) {
@@ -56,6 +69,8 @@ const main = async (): Promise<void> => {
   const viewerResult = await fetchViewerScopes()
   const viewer = viewerResult.data
 
+  const update = checkForUpdate({ name: pkg.name, version: pkg.version })
+
   // Enter the alternate screen buffer so the dashboard takes over the terminal
   // cleanly and restores the previous scrollback on exit (like vim, less, htop).
   const ALT_SCREEN_ENTER = '\x1b[?1049h\x1b[H'
@@ -77,7 +92,10 @@ const main = async (): Promise<void> => {
     process.exit(143)
   })
 
-  const { waitUntilExit } = render(<App config={config} configPath={path} viewer={viewer} firstRun={createdDefault} />, { exitOnCtrlC: true })
+  const { waitUntilExit } = render(
+    <App config={config} configPath={path} viewer={viewer} firstRun={createdDefault} update={update} />,
+    { exitOnCtrlC: true }
+  )
   try {
     await waitUntilExit()
   } finally {

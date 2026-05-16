@@ -4,13 +4,12 @@ Live terminal dashboard for GitHub PRs. TypeScript + Ink (React for the terminal
 
 ## Node version
 
-The Node version is pinned in three places that must stay in sync:
+Two different files do two different jobs:
 
-- `.node-version` — read by nodenv
-- `.nvmrc` — read by nvm
-- `package.json` `engines.node`
+- **Dev environment** — `.node-version` (nodenv) and `.nvmrc` (nvm) pin the **exact patch** version every contributor should use locally. These stay in sync with each other. Use the exact patch (e.g. `24.13.0`), never a range. When bumping, update both files in the same commit and regenerate `package-lock.json` under the new version.
+- **Consumer requirement** — `package.json` `engines.node` declares the **minimum** version a user's machine needs to run the published CLI. It's a range (`>=22`) — currently floored at 22 because Ink 5 requires `>=22`. Don't pin this to an exact patch; doing so makes `npm i -g` fail for anyone not on that exact version.
 
-Use the exact patch version (e.g. `24.13.0`), never a range or major-only (`^24`, `24`, `>=22`). When bumping Node, update all three files in the same commit and regenerate `package-lock.json` under the new version.
+Bump the floor when you adopt a dep that needs a newer Node, or when a Node major hits EOL.
 
 ## Architecture
 
@@ -28,11 +27,13 @@ Three layers, kept separate:
 
 - **`src/ui/`** — Ink components
   - `App.tsx` — top-level, wires scheduler + keybinds + settings
-  - `Header.tsx`, `PresetTabs.tsx`, `PRTable.tsx`, `StatusFooter.tsx`, `SettingsPanel.tsx`, `FilterBar.tsx`, `FailedChecks.tsx`
+  - `Header.tsx`, `PresetTabs.tsx`, `PRTable.tsx`, `StatusFooter.tsx`, `SettingsPanel.tsx`, `FilterBar.tsx`, `FailedChecks.tsx`, `UpdateBanner.tsx`
 
 - **`src/format/`** — pure rendering helpers (`relativeTime`, `cleanTitle`, status glyphs)
 
 - **`src/config/`** — Zod-validated config at `~/.config/pr-dashboard/config.json`. `loader.ts` reports `createdDefault: true` on first run so `App` knows to auto-open settings.
+
+- **`src/update/`** — thin wrapper around `update-notifier` (`checker.ts`). Reads `notifier.update` without calling `.notify()` so the default boxed stderr output never fires; the result is passed into `App` and rendered by `UpdateBanner` in brand red at the bottom. Honors `NO_UPDATE_NOTIFIER`. The notifier itself schedules an unref'd background child to refresh the cache once a day.
 
 ## Two-tier polling
 

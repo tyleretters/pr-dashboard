@@ -13,22 +13,25 @@ import { PresetTabs } from './PresetTabs.tsx'
 import { PRTable } from './PRTable.tsx'
 import { SettingsPanel } from './SettingsPanel.tsx'
 import { StatusFooter } from './StatusFooter.tsx'
+import { UpdateBanner } from './UpdateBanner.tsx'
 import type { Config, Scope } from '../config/schema.ts'
 import type { ViewerScopes } from '../github/queries/orgsQuery.ts'
 import type { DetailedPR } from '../github/types.ts'
 import type { PollTick, SchedulerHandle } from '../poll/scheduler.ts'
 import type { RateLimit } from '../github/client.ts'
+import type { UpdateInfo } from '../update/checker.ts'
 
 interface Props {
   config: Config
   configPath: string
   viewer: ViewerScopes
   firstRun: boolean
+  update: UpdateInfo | null
 }
 
 const FLASH_MS = 1200
 
-export const App: React.FC<Props> = ({ config: initialConfig, configPath, viewer, firstRun }) => {
+export const App: React.FC<Props> = ({ config: initialConfig, configPath, viewer, firstRun, update }) => {
   const { exit } = useApp()
   const { stdout } = useStdout()
 
@@ -260,6 +263,7 @@ export const App: React.FC<Props> = ({ config: initialConfig, configPath, viewer
             }}
           />
         ) : null}
+        <UpdateBanner update={update} />
       </Box>
     )
   }
@@ -296,6 +300,7 @@ export const App: React.FC<Props> = ({ config: initialConfig, configPath, viewer
         />
       ) : null}
       <StatusFooter lastTickAt={lastTickAt} nextTickAt={nextTickAt} rateLimit={rateLimit} now={now} loading={loading} />
+      <UpdateBanner update={update} />
     </Box>
   )
 }
