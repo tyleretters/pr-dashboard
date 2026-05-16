@@ -41,8 +41,13 @@ const chunk = <T>(arr: T[], size: number): T[][] => {
   return out
 }
 
+export interface RunOneTickOptions extends Pick<SchedulerOptions, 'scope' | 'detailBatchSize'> {
+  /** When true, refetch details for every indexed PR regardless of cache state. */
+  force?: boolean
+}
+
 export const runOneTick = async (
-  opts: Pick<SchedulerOptions, 'scope' | 'detailBatchSize'>,
+  opts: RunOneTickOptions,
   cache: Map<string, DetailedPR>,
   fetchers: Fetchers = defaultFetchers
 ): Promise<PollTick> => {
@@ -64,7 +69,7 @@ export const runOneTick = async (
       return true
     })
 
-    const idsNeedingDetail = diffForDetailFetch(allIndexed, cache)
+    const idsNeedingDetail = opts.force ? allIndexed.map(p => p.id) : diffForDetailFetch(allIndexed, cache)
     const detailBatches = chunk(idsNeedingDetail, opts.detailBatchSize)
     const freshDetails: DetailedPR[] = []
     for (const batch of detailBatches) {
@@ -116,9 +121,9 @@ export const startScheduler = (opts: SchedulerOptions, fetchers: Fetchers = defa
   let timer: NodeJS.Timeout | null = null
   let inFlight: Promise<void> | null = null
 
-  const tick = async (): Promise<void> => {
+  const tick = async (force = false): Promise<void> => {
     if (stopped) return
-    const result = await runOneTick({ scope, detailBatchSize: opts.detailBatchSize }, cache, fetchers)
+    const result = await runOneTick({ scope, detailBatchSize: opts.detailBatchSize, force }, cache, fetchers)
     if (!stopped) opts.onTick(result)
   }
 
@@ -148,14 +153,14 @@ export const startScheduler = (opts: SchedulerOptions, fetchers: Fetchers = defa
       if (inFlight) {
         void inFlight.then(() => {
           if (!stopped) {
-            inFlight = tick().finally(() => {
+            inFlight = tick(true).finally(() => {
               inFlight = null
               schedule()
             })
           }
         })
       } else {
-        inFlight = tick().finally(() => {
+        inFlight = tick(true).finally(() => {
           inFlight = null
           schedule()
         })

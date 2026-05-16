@@ -1,14 +1,33 @@
-import type { DetailedPR, IndexedPR } from '../github/types.ts'
+import type { DetailedPR, IndexedPR, MergeStateStatus } from '../github/types.ts'
+
+const TRANSIENT_MERGE_STATES: ReadonlySet<MergeStateStatus> = new Set<MergeStateStatus>([
+  'BLOCKED',
+  'BEHIND',
+  'UNSTABLE',
+  'HAS_HOOKS',
+  'UNKNOWN',
+])
+
+const isTransient = (prev: DetailedPR): boolean =>
+  prev.ciState === 'PENDING' ||
+  prev.ciState === 'EXPECTED' ||
+  prev.mergeable === 'UNKNOWN' ||
+  TRANSIENT_MERGE_STATES.has(prev.mergeStateStatus)
 
 /**
  * Decide which indexed PRs need a detail fetch.
- * Reasons: new id, or updatedAt / headRefOid changed since last detail snapshot.
+ * Reasons:
+ *  - new id (not in cache)
+ *  - updatedAt or headRefOid changed since last detail snapshot
+ *  - cached detail is in a transient state (CI pending, async mergeability still
+ *    resolving, BLOCKED/BEHIND/UNSTABLE/HAS_HOOKS) — these flips do not bump
+ *    PullRequest.updatedAt, so we have to poll them explicitly
  */
 export const diffForDetailFetch = (indexed: IndexedPR[], previous: Map<string, DetailedPR>): string[] => {
   const changed: string[] = []
   for (const pr of indexed) {
     const prev = previous.get(pr.id)
-    if (prev?.updatedAt !== pr.updatedAt || prev.headRefOid !== pr.headRefOid) {
+    if (prev?.updatedAt !== pr.updatedAt || prev.headRefOid !== pr.headRefOid || isTransient(prev)) {
       changed.push(pr.id)
     }
   }

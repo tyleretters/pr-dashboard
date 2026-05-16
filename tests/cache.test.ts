@@ -55,6 +55,50 @@ describe('diffForDetailFetch', () => {
     const indexed = [makeIndexed({ id: 'a', headRefOid: 'new' })]
     expect(diffForDetailFetch(indexed, cached)).toEqual(['a'])
   })
+
+  it('refetches when cached CI is PENDING even if updatedAt matches', () => {
+    const cached = new Map([['a', makeDetail({ id: 'a', ciState: 'PENDING' })]])
+    const indexed = [makeIndexed({ id: 'a' })]
+    expect(diffForDetailFetch(indexed, cached)).toEqual(['a'])
+  })
+
+  it('refetches when cached CI is EXPECTED even if updatedAt matches', () => {
+    const cached = new Map([['a', makeDetail({ id: 'a', ciState: 'EXPECTED' })]])
+    const indexed = [makeIndexed({ id: 'a' })]
+    expect(diffForDetailFetch(indexed, cached)).toEqual(['a'])
+  })
+
+  it('refetches when cached mergeStateStatus is BLOCKED even if updatedAt matches', () => {
+    const cached = new Map([['a', makeDetail({ id: 'a', mergeStateStatus: 'BLOCKED' })]])
+    const indexed = [makeIndexed({ id: 'a' })]
+    expect(diffForDetailFetch(indexed, cached)).toEqual(['a'])
+  })
+
+  it('refetches when cached mergeStateStatus is UNSTABLE even if updatedAt matches', () => {
+    const cached = new Map([['a', makeDetail({ id: 'a', mergeStateStatus: 'UNSTABLE' })]])
+    const indexed = [makeIndexed({ id: 'a' })]
+    expect(diffForDetailFetch(indexed, cached)).toEqual(['a'])
+  })
+
+  it('refetches when cached mergeStateStatus is UNKNOWN even if updatedAt matches', () => {
+    const cached = new Map([['a', makeDetail({ id: 'a', mergeStateStatus: 'UNKNOWN' })]])
+    const indexed = [makeIndexed({ id: 'a' })]
+    expect(diffForDetailFetch(indexed, cached)).toEqual(['a'])
+  })
+
+  it('refetches when cached mergeable is UNKNOWN even if updatedAt matches', () => {
+    const cached = new Map([['a', makeDetail({ id: 'a', mergeable: 'UNKNOWN' })]])
+    const indexed = [makeIndexed({ id: 'a' })]
+    expect(diffForDetailFetch(indexed, cached)).toEqual(['a'])
+  })
+
+  it('does not refetch when cached state is terminal (SUCCESS + CLEAN)', () => {
+    const cached = new Map([
+      ['a', makeDetail({ id: 'a', ciState: 'SUCCESS', mergeStateStatus: 'CLEAN', mergeable: 'MERGEABLE' })],
+    ])
+    const indexed = [makeIndexed({ id: 'a' })]
+    expect(diffForDetailFetch(indexed, cached)).toEqual([])
+  })
 })
 
 describe('mergeSnapshot', () => {

@@ -96,6 +96,38 @@ describe('runOneTick', () => {
     expect(tick.error?.message).toBe('boom')
   })
 
+  it('refetches all PRs when force is true regardless of cache state', async () => {
+    const fetchIndex = vi.fn(() => Promise.resolve({ data: [indexed('a'), indexed('b')], rateLimit: null }))
+    const fetchDetails = vi.fn((ids: string[]) => Promise.resolve({ data: ids.map(id => detail(id)), rateLimit: null }))
+    const cache = new Map<string, DetailedPR>()
+    const opts = { scope: { scopeKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
+
+    await runOneTick(opts, cache, { fetchIndex, fetchDetails })
+    fetchDetails.mockClear()
+
+    const forced = await runOneTick({ ...opts, force: true }, cache, { fetchIndex, fetchDetails })
+    expect(fetchDetails).toHaveBeenCalledTimes(1)
+    expect(fetchDetails.mock.calls[0]?.[0]).toEqual(['a', 'b'])
+    expect(forced.prs).toHaveLength(2)
+  })
+
+  it('refetches PRs whose cached state is transient even when updatedAt matches', async () => {
+    const fetchIndex = vi.fn(() => Promise.resolve({ data: [indexed('a'), indexed('b')], rateLimit: null }))
+    const fetchDetails = vi.fn((ids: string[]) =>
+      // first call returns transient ciState; we'll then expect a refetch on the next tick
+      Promise.resolve({ data: ids.map(id => detail(id, { ciState: 'PENDING' })), rateLimit: null })
+    )
+    const cache = new Map<string, DetailedPR>()
+    const opts = { scope: { scopeKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
+
+    await runOneTick(opts, cache, { fetchIndex, fetchDetails })
+    fetchDetails.mockClear()
+
+    await runOneTick(opts, cache, { fetchIndex, fetchDetails })
+    expect(fetchDetails).toHaveBeenCalledTimes(1)
+    expect(fetchDetails.mock.calls[0]?.[0]).toEqual(['a', 'b'])
+  })
+
   it('dedupes PRs that match multiple filters in one scope', async () => {
     const a = indexed('a')
     const fetchIndex = vi
