@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ciGlyph, cleanTitle, mergeGlyph, reviewGlyph } from '@/format/status.ts'
+import { ciGlyph, cleanTitle, mergeGlyph, reviewGlyph } from '../src/format/status.ts'
 
 describe('ciGlyph', () => {
   it('renders success as green check', () => {

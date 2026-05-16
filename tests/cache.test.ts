@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { diffForDetailFetch, mergeSnapshot } from '@/poll/cache.ts'
-import type { DetailedPR, IndexedPR } from '@/github/types.ts'
+import { diffForDetailFetch, mergeSnapshot } from '../src/poll/cache.ts'
+import type { DetailedPR, IndexedPR } from '../src/github/types.ts'
 
 const makeIndexed = (overrides: Partial<IndexedPR> = {}): IndexedPR => ({
   id: 'PR_1',

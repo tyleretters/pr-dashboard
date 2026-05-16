@@ -1,4 +1,4 @@
-import type { CIState, MergeStateStatus, MergeableState, ReviewDecision } from '@/github/types.ts'
+import type { CIState, MergeStateStatus, MergeableState, ReviewDecision } from '../github/types.ts'
 
 export interface Glyph {
   char: string

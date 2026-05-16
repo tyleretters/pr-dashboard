@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { runOneTick, startScheduler } from '@/poll/scheduler.ts'
-import type { PollTick } from '@/poll/scheduler.ts'
-import type { DetailedPR, IndexedPR } from '@/github/types.ts'
+import { runOneTick, startScheduler } from '../src/poll/scheduler.ts'
+import type { PollTick } from '../src/poll/scheduler.ts'
+import type { DetailedPR, IndexedPR } from '../src/github/types.ts'
 
 const indexed = (id: string, updatedAt = '2026-05-16T12:00:00Z', headRefOid = 'abc'): IndexedPR => ({
   id,

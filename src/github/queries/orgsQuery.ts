@@ -1,5 +1,5 @@
-import { graphqlQuery } from '@/github/client.ts'
-import type { GraphqlResult } from '@/github/client.ts'
+import { graphqlQuery } from '../client.ts'
+import type { GraphqlResult } from '../client.ts'
 
 export interface ViewerScopes {
   login: string

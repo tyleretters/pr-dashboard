@@ -1,5 +1,5 @@
-import { graphqlQuery } from '@/github/client.ts'
-import type { GraphqlResult } from '@/github/client.ts'
+import { graphqlQuery } from '../client.ts'
+import type { GraphqlResult } from '../client.ts'
 import type {
   CIState,
   DetailedPR,
@@ -8,7 +8,7 @@ import type {
   MergeStateStatus,
   MergeableState,
   ReviewDecision,
-} from '@/github/types.ts'
+} from '../types.ts'
 
 interface CheckContextNode {
   __typename?: string

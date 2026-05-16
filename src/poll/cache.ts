@@ -1,4 +1,4 @@
-import type { DetailedPR, IndexedPR } from '@/github/types.ts'
+import type { DetailedPR, IndexedPR } from '../github/types.ts'
 
 /**
  * Decide which indexed PRs need a detail fetch.

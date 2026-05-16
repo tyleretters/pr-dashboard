@@ -1,8 +1,8 @@
-import { fetchDetails } from '@/github/queries/detailQuery.ts'
-import { fetchIndex } from '@/github/queries/indexQuery.ts'
-import { diffForDetailFetch, mergeSnapshot } from '@/poll/cache.ts'
-import type { RateLimit } from '@/github/client.ts'
-import type { DetailedPR, IndexedPR } from '@/github/types.ts'
+import { fetchDetails } from '../github/queries/detailQuery.ts'
+import { fetchIndex } from '../github/queries/indexQuery.ts'
+import { diffForDetailFetch, mergeSnapshot } from './cache.ts'
+import type { RateLimit } from '../github/client.ts'
+import type { DetailedPR, IndexedPR } from '../github/types.ts'
 
 export interface ScopeQuery {
   presetKey: string

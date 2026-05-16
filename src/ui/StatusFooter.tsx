@@ -1,7 +1,7 @@
 import React from 'react'
 import { Box, Text } from 'ink'
 
-import type { RateLimit } from '@/github/client.ts'
+import type { RateLimit } from '../github/client.ts'
 
 interface Props {
   lastTickAt: number | null

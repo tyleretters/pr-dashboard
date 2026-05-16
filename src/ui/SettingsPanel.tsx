@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Text, useInput } from 'ink'
 
-import type { Scope } from '@/config/schema.ts'
+import type { Scope } from '../config/schema.ts'
 
 interface Props {
   scopes: Scope[]

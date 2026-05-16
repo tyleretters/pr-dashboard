@@ -1,11 +1,11 @@
 import React from 'react'
 import { Box, Text } from 'ink'
 
-import { daysSince, relativeTime } from '@/format/relativeTime.ts'
-import { ciGlyph, cleanTitle, mergeGlyph, reviewGlyph } from '@/format/status.ts'
-import { COLUMN_SPECS } from '@/ui/columns.ts'
-import type { ColumnKey } from '@/config/schema.ts'
-import type { DetailedPR } from '@/github/types.ts'
+import { daysSince, relativeTime } from '../format/relativeTime.ts'
+import { ciGlyph, cleanTitle, mergeGlyph, reviewGlyph } from '../format/status.ts'
+import { COLUMN_SPECS } from './columns.ts'
+import type { ColumnKey } from '../config/schema.ts'
+import type { DetailedPR } from '../github/types.ts'
 
 interface Props {
   prs: DetailedPR[]

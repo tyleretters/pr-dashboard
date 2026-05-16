@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { daysSince, relativeTime } from '@/format/relativeTime.ts'
+import { daysSince, relativeTime } from '../src/format/relativeTime.ts'
 
 const NOW = Date.parse('2026-05-16T12:00:00Z')
 

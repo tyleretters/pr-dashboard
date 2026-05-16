@@ -1,4 +1,4 @@
-import type { ColumnKey } from '@/config/schema.ts'
+import type { ColumnKey } from '../config/schema.ts'
 
 export interface ColumnSpec {
   key: ColumnKey

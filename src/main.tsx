@@ -1,12 +1,12 @@
 import React from 'react'
 import { render, Text } from 'ink'
 
-import { loadConfig } from '@/config/loader.ts'
-import { fetchViewerScopes } from '@/github/queries/orgsQuery.ts'
-import { GhAuthError, GhMissingError, verifyGhAvailable } from '@/auth/ghToken.ts'
-import { App } from '@/ui/App.tsx'
+import { loadConfig } from './config/loader.ts'
+import { fetchViewerScopes } from './github/queries/orgsQuery.ts'
+import { GhAuthError, GhMissingError, verifyGhAvailable } from './auth/ghToken.ts'
+import { App } from './ui/App.tsx'
 
-const VERSION = '0.1.0'
+const VERSION = '0.1.4'
 
 const main = async (): Promise<void> => {
   const argv = process.argv.slice(2)

@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { loadConfig, saveConfig } from '@/config/loader.ts'
-import { buildScopes, ConfigSchema, DEFAULT_CONFIG, scopeToFilter } from '@/config/schema.ts'
+import { loadConfig, saveConfig } from '../src/config/loader.ts'
+import { buildScopes, ConfigSchema, DEFAULT_CONFIG, scopeToFilter } from '../src/config/schema.ts'
 
 describe('ConfigSchema', () => {
   it('accepts the default config', () => {

@@ -2,8 +2,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import { ConfigSchema, DEFAULT_CONFIG } from '@/config/schema.ts'
-import type { Config } from '@/config/schema.ts'
+import { ConfigSchema, DEFAULT_CONFIG } from './schema.ts'
+import type { Config } from './schema.ts'
 
 export const CONFIG_PATH = join(homedir(), '.config', 'pr-dashboard', 'config.json')
 

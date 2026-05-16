@@ -1,6 +1,6 @@
-import { graphqlQuery } from '@/github/client.ts'
-import type { GraphqlResult } from '@/github/client.ts'
-import type { IndexedPR } from '@/github/types.ts'
+import { graphqlQuery } from '../client.ts'
+import type { GraphqlResult } from '../client.ts'
+import type { IndexedPR } from '../types.ts'
 
 interface IndexResponseNode {
   id: string

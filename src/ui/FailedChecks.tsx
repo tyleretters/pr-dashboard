@@ -1,7 +1,7 @@
 import React from 'react'
 import { Box, Text } from 'ink'
 
-import type { DetailedPR } from '@/github/types.ts'
+import type { DetailedPR } from '../github/types.ts'
 
 interface Props {
   pr: DetailedPR | null
