@@ -2,8 +2,6 @@
 
 A live terminal dashboard for GitHub PRs across all your orgs. Fresher than the web UI: it polls smart (a cheap "index" query identifies which PRs actually changed; only those get detail fetches), shows freshness in the UI so you can see it's alive, and stays out of your way otherwise.
 
-![prd screenshot](https://raw.githubusercontent.com/northern-information/pr-dashboard/main/.github/screenshot.png)
-
 ## Install
 
 ```
@@ -109,6 +107,17 @@ npm run verify         # typecheck + lint + test (CI gate)
 ```
 
 Coverage thresholds: 90% statements / 80% branches / 90% functions / 90% lines on the unit-testable modules (`src/config`, `src/poll`, `src/format`). UI components are excluded — they're tested at integration level. CI runs `npm run test:coverage` on every push and uploads the HTML report as a workflow artifact.
+
+## Release
+
+Maintainer notes — releases happen via `git` tags and the GitHub Actions publish workflow:
+
+```
+npm version patch       # 0.1.1 → 0.1.2 (or minor / major)
+git push --follow-tags  # pushes commit + tag, triggers publish workflow
+```
+
+Tags must match `v[0-9]+.[0-9]+.[0-9]+` (semver). GitHub rulesets enforce this on push; the publish workflow re-checks it before running `npm publish`. Auth uses npm Trusted Publishing (OIDC) — no `NPM_TOKEN` to rotate.
 
 ## Why not just use `gh pr list`?
 

@@ -51,20 +51,11 @@ The whole project ships as TypeScript source — no build step. `tsx` is a *runt
 
 ## Distribution
 
-- Published to npm as `pr-dashboard`.
+- Published to npm as `@northern-information/pr-dashboard` (scoped, public).
 - `npm i -g @northern-information/pr-dashboard` puts `prd` on the user's PATH.
-- `files` in `package.json` whitelist what ships: `bin/`, `src/`, `tsconfig.json`, `README.md`. Nothing else (no tests, no configs).
-- `prepublishOnly` runs `npm run verify` so a broken publish is impossible.
-
-To cut a release:
-```
-# bump version
-npm version patch    # or minor / major
-# publish
-npm publish
-# push tag
-git push --follow-tags
-```
+- `files` in `package.json` whitelists what ships: `bin/`, `src/`, `tsconfig.json`, `README.md`. Nothing else (no tests, no coverage, no configs).
+- `prepublishOnly` runs `npm run verify` so a broken local publish is impossible.
+- Releases ship through GitHub Actions; see the Publishing section below for the flow.
 
 ## Conventions
 
@@ -118,31 +109,41 @@ Admin (repo owner) can bypass any of these for emergency hotfixes. Use sparingly
 
 ## Publishing
 
-`.github/workflows/publish.yml` publishes to npm on every tag push matching `v*`. Flow:
+`.github/workflows/publish.yml` publishes to npm on every tag push matching `v*`. The release flow:
 
 ```
-npm version patch       # 0.1.0 → 0.1.1, creates a git tag
-git push --follow-tags  # pushes commit + tag
+npm version patch       # 0.1.1 → 0.1.2, updates package.json and creates a git tag
+git push --follow-tags  # pushes commit + tag, which fires the workflow
 ```
 
 The workflow:
-1. Checks out the tagged commit
-2. Runs `npm ci`
-3. Verifies the git tag matches `package.json` version (e.g. `v0.1.1` must match `"version": "0.1.1"`)
-4. Runs `npm publish --provenance --access public` with `NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}`
+1. Checks out the tagged commit.
+2. Pins `npm@latest` (Trusted Publishing requires npm ≥ 11.5.1).
+3. Runs `npm ci`.
+4. **Tag format check** — fails if `${GITHUB_REF_NAME}` doesn't match `v[0-9]+.[0-9]+.[0-9]+`.
+5. **Tag/version match check** — fails if `package.json` version doesn't equal the tag without its `v` prefix.
+6. Runs `npm publish --provenance --access public` — no `NODE_AUTH_TOKEN`.
 
-Provenance adds a verified link from the npm package back to the GitHub commit it was built from. Shows up as a "verified" badge on npmjs.com.
-
-Authentication uses **npm Trusted Publishing** (OIDC), not a long-lived token. The trust relationship is configured once on the npm package page:
+Authentication uses **npm Trusted Publishing** (OIDC). The trust relationship is configured once on the npm package page (npmjs.com → package → Access → Trusted Publisher):
 
 - Publisher: GitHub Actions
 - Organization: `northern-information`
 - Repository: `pr-dashboard`
 - Workflow filename: `publish.yml`
 
-The workflow grants `id-token: write` permission and runs `npm publish --provenance` without `NODE_AUTH_TOKEN` — npm reads the GitHub OIDC token, verifies the publish is coming from this exact workflow on a tag, and signs a provenance attestation linking the npm release back to the GitHub commit.
+The workflow grants `id-token: write` permission. npm reads the GitHub OIDC token, verifies the publish is coming from this exact workflow on a tag, and signs a provenance attestation linking the npm release back to the GitHub commit. The provenance shows up as a "verified" badge on npmjs.com.
 
-If publishing breaks because Trusted Publishing settings changed, check the npm package page → Access tab → Trusted Publisher section. There is no `NPM_TOKEN` secret to rotate.
+There is no `NPM_TOKEN` to rotate. If publishing breaks, the failure is almost always one of: the trust relationship was deleted on npm, the workflow file was renamed, or the tag format is wrong.
+
+## Tag protection
+
+Tags are protected by a separate ruleset (Settings → Rules → Rulesets):
+
+- **Tag name pattern** — must match `^v[0-9]+\.[0-9]+\.[0-9]+$` (semver, leading `v`)
+- **`non_fast_forward`** — force pushes to tags are blocked
+- **`deletion`** — published tags cannot be deleted
+
+This makes every released version immutable. Once `v0.1.1` exists, that tag stays pinned to that commit forever. Admin can bypass for an emergency, but the publish workflow's tag-format check will still reject a malformed tag even if the ruleset is bypassed (belt + suspenders).
 
 ## What lives where
 

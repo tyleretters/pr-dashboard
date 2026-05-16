@@ -24,8 +24,13 @@ jobs:
       # setup-node with Node 24 ships a compatible version, but pin explicitly.
       - run: npm install --global npm@latest
       - run: npm ci
-      - name: Verify tag matches package.json version
+      - name: Verify tag is semver and matches package.json
         run: |
+          # Tag must be vMAJOR.MINOR.PATCH (e.g. v1.2.3). Rejects v1.2, v1.2.3-rc, etc.
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag ($GITHUB_REF_NAME) does not match semver pattern v[0-9]+.[0-9]+.[0-9]+"
+            exit 1
+          fi
           PKG_VERSION=$(node -p "require('./package.json').version")
           TAG_VERSION=${GITHUB_REF_NAME#v}
           if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
