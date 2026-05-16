@@ -37,7 +37,7 @@ describe('runOneTick', () => {
     const fetchIndex = vi.fn(() => Promise.resolve({ data: [indexed('a'), indexed('b')], rateLimit: null }))
     const fetchDetails = vi.fn((ids: string[]) => Promise.resolve({ data: ids.map(id => detail(id)), rateLimit: null }))
     const cache = new Map<string, DetailedPR>()
-    const opts = { scope: { presetKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
+    const opts = { scope: { scopeKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
 
     const first = await runOneTick(opts, cache, { fetchIndex, fetchDetails })
     expect(first.prs).toHaveLength(2)
@@ -60,7 +60,7 @@ describe('runOneTick', () => {
       .mockResolvedValueOnce({ data: [a2, b1], rateLimit: null })
     const fetchDetails = vi.fn((ids: string[]) => Promise.resolve({ data: ids.map(id => detail(id)), rateLimit: null }))
     const cache = new Map<string, DetailedPR>()
-    const opts = { scope: { presetKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
+    const opts = { scope: { scopeKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
 
     await runOneTick(opts, cache, { fetchIndex, fetchDetails })
     fetchDetails.mockClear()
@@ -78,7 +78,7 @@ describe('runOneTick', () => {
       Promise.resolve({ data: idsBatch.map(id => detail(id)), rateLimit: null })
     )
     const cache = new Map<string, DetailedPR>()
-    const opts = { scope: { presetKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
+    const opts = { scope: { scopeKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
 
     await runOneTick(opts, cache, { fetchIndex, fetchDetails })
     expect(fetchDetails).toHaveBeenCalledTimes(3) // 25 + 25 + 10
@@ -90,13 +90,13 @@ describe('runOneTick', () => {
     const fetchIndex = vi.fn(() => Promise.reject(new Error('boom')))
     const fetchDetails = vi.fn(() => Promise.resolve({ data: [], rateLimit: null }))
     const cache = new Map<string, DetailedPR>()
-    const opts = { scope: { presetKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
+    const opts = { scope: { scopeKey: 'work', filters: ['q'] }, detailBatchSize: 25 }
     const tick = await runOneTick(opts, cache, { fetchIndex, fetchDetails })
     expect(tick.error).not.toBeNull()
     expect(tick.error?.message).toBe('boom')
   })
 
-  it('dedupes PRs that match multiple filters in one preset', async () => {
+  it('dedupes PRs that match multiple filters in one scope', async () => {
     const a = indexed('a')
     const fetchIndex = vi
       .fn<(q: string) => Promise<{ data: IndexedPR[]; rateLimit: null }>>()
@@ -104,7 +104,7 @@ describe('runOneTick', () => {
       .mockResolvedValueOnce({ data: [a], rateLimit: null })
     const fetchDetails = vi.fn((ids: string[]) => Promise.resolve({ data: ids.map(id => detail(id)), rateLimit: null }))
     const cache = new Map<string, DetailedPR>()
-    const opts = { scope: { presetKey: 'work', filters: ['q1', 'q2'] }, detailBatchSize: 25 }
+    const opts = { scope: { scopeKey: 'work', filters: ['q1', 'q2'] }, detailBatchSize: 25 }
     const tick = await runOneTick(opts, cache, { fetchIndex, fetchDetails })
     expect(tick.prs).toHaveLength(1)
     expect(fetchDetails.mock.calls[0]?.[0]).toEqual(['a'])
@@ -126,7 +126,7 @@ describe('startScheduler', () => {
     )
     const onTick = vi.fn<(t: PollTick) => void>()
     const handle = startScheduler(
-      { scope: { presetKey: 'work', filters: ['q'] }, indexIntervalMs: 1000, detailBatchSize: 25, onTick },
+      { scope: { scopeKey: 'work', filters: ['q'] }, indexIntervalMs: 1000, detailBatchSize: 25, onTick },
       { fetchIndex, fetchDetails }
     )
     await vi.waitFor(() => {
@@ -142,7 +142,7 @@ describe('startScheduler', () => {
     )
     const onTick = vi.fn<(t: PollTick) => void>()
     const handle = startScheduler(
-      { scope: { presetKey: 'work', filters: ['q'] }, indexIntervalMs: 1000, detailBatchSize: 25, onTick },
+      { scope: { scopeKey: 'work', filters: ['q'] }, indexIntervalMs: 1000, detailBatchSize: 25, onTick },
       { fetchIndex, fetchDetails }
     )
     await vi.waitFor(() => {
@@ -162,7 +162,7 @@ describe('startScheduler', () => {
     )
     const onTick = vi.fn<(t: PollTick) => void>()
     const handle = startScheduler(
-      { scope: { presetKey: 'work', filters: ['q'] }, indexIntervalMs: 1000, detailBatchSize: 25, onTick },
+      { scope: { scopeKey: 'work', filters: ['q'] }, indexIntervalMs: 1000, detailBatchSize: 25, onTick },
       { fetchIndex, fetchDetails }
     )
     await vi.waitFor(() => {
@@ -180,7 +180,7 @@ describe('startScheduler', () => {
     )
     const onTick = vi.fn<(t: PollTick) => void>()
     const handle = startScheduler(
-      { scope: { presetKey: 'work', filters: ['q'] }, indexIntervalMs: 10_000, detailBatchSize: 25, onTick },
+      { scope: { scopeKey: 'work', filters: ['q'] }, indexIntervalMs: 10_000, detailBatchSize: 25, onTick },
       { fetchIndex, fetchDetails }
     )
     await vi.waitFor(() => {
@@ -200,16 +200,16 @@ describe('startScheduler', () => {
     )
     const onTick = vi.fn<(t: PollTick) => void>()
     const handle = startScheduler(
-      { scope: { presetKey: 'work', filters: ['q'] }, indexIntervalMs: 10_000, detailBatchSize: 25, onTick },
+      { scope: { scopeKey: 'work', filters: ['q'] }, indexIntervalMs: 10_000, detailBatchSize: 25, onTick },
       { fetchIndex, fetchDetails }
     )
     await vi.waitFor(() => {
       expect(onTick).toHaveBeenCalledTimes(1)
     })
-    handle.setScope({ presetKey: 'personal', filters: ['q2'] })
+    handle.setScope({ scopeKey: 'personal', filters: ['q2'] })
     await vi.waitFor(() => {
       const calls = onTick.mock.calls
-      expect(calls[calls.length - 1]?.[0].presetKey).toBe('personal')
+      expect(calls[calls.length - 1]?.[0].scopeKey).toBe('personal')
     })
     handle.stop()
   })

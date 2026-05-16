@@ -189,7 +189,7 @@ export const PRTable: React.FC<Props> = ({ prs, columns, cursor, now, flashUntil
   if (prs.length === 0) {
     return (
       <Box paddingX={1} paddingY={1}>
-        <Text dimColor>No PRs in this preset.</Text>
+        <Text dimColor>No PRs in this scope.</Text>
       </Box>
     )
   }
