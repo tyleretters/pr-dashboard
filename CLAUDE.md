@@ -106,6 +106,16 @@ Scope is restricted to `src/config/**`, `src/poll/**`, `src/format/**` — the m
 
 CI (`.github/workflows/ci.yml`) runs `npm run test:coverage` on every push and PR, then uploads the `coverage/` directory as a workflow artifact (downloadable from the workflow run page). No third-party coverage service required.
 
+## Branch protection
+
+`main` is protected by a repository ruleset (managed in repo Settings → Rules → Rulesets, or via the GitHub API). Active rules:
+
+- `non_fast_forward` — force pushes to main are blocked
+- `deletion` — the main branch cannot be deleted
+- `required_status_checks` with `strict: true` — the `verify` CI job must pass before merging, and the branch must be up to date with main
+
+Admin (repo owner) can bypass any of these for emergency hotfixes. Use sparingly — if you find yourself bypassing often, fix the underlying CI flakiness instead.
+
 ## Publishing
 
 `.github/workflows/publish.yml` publishes to npm on every tag push matching `v*`. Flow:
