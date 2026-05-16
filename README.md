@@ -2,7 +2,7 @@
 
 A live terminal dashboard for GitHub PRs across all your orgs. Fresher than the web UI: it polls smart (a cheap "index" query identifies which PRs actually changed; only those get detail fetches), shows freshness in the UI so you can see it's alive, and stays out of your way otherwise.
 
-![prd screenshot](https://raw.githubusercontent.com/northern-information/pr-dashboard/main/.github/screenshot.png)
+![prd screenshot](https://raw.githubusercontent.com/tyleretters/pr-dashboard/main/.github/screenshot.png)
 
 ## Install
 
@@ -90,7 +90,7 @@ Each scope renders as a single GitHub search query: `is:open is:pr involves:@me 
 ## Develop
 
 ```
-git clone git@github.com:northern-information/pr-dashboard.git
+git clone git@github.com:tyleretters/pr-dashboard.git
 cd pr-dashboard
 npm install
 npm link        # makes `prd` resolve to your local checkout

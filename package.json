@@ -22,13 +22,13 @@
     "cli",
     "gh"
   ],
-  "homepage": "https://github.com/northern-information/pr-dashboard",
+  "homepage": "https://github.com/tyleretters/pr-dashboard",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/northern-information/pr-dashboard.git"
+    "url": "git+https://github.com/tyleretters/pr-dashboard.git"
   },
   "bugs": {
-    "url": "https://github.com/northern-information/pr-dashboard/issues"
+    "url": "https://github.com/tyleretters/pr-dashboard/issues"
   },
   "license": "MIT",
   "author": "Tyler Etters",
