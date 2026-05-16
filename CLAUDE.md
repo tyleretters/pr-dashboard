@@ -133,7 +133,16 @@ The workflow:
 
 Provenance adds a verified link from the npm package back to the GitHub commit it was built from. Shows up as a "verified" badge on npmjs.com.
 
-The `NPM_TOKEN` secret needs to be added to repo settings (one-time setup) — generate at npmjs.com → Access Tokens → Generate New Token → "Automation" type.
+Authentication uses **npm Trusted Publishing** (OIDC), not a long-lived token. The trust relationship is configured once on the npm package page:
+
+- Publisher: GitHub Actions
+- Organization: `northern-information`
+- Repository: `pr-dashboard`
+- Workflow filename: `publish.yml`
+
+The workflow grants `id-token: write` permission and runs `npm publish --provenance` without `NODE_AUTH_TOKEN` — npm reads the GitHub OIDC token, verifies the publish is coming from this exact workflow on a tag, and signs a provenance attestation linking the npm release back to the GitHub commit.
+
+If publishing breaks because Trusted Publishing settings changed, check the npm package page → Access tab → Trusted Publisher section. There is no `NPM_TOKEN` secret to rotate.
 
 ## What lives where
 

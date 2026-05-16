@@ -20,6 +20,9 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
+      # npm >= 11.5.1 is required for Trusted Publishing (OIDC).
+      # setup-node with Node 24 ships a compatible version, but pin explicitly.
+      - run: npm install --global npm@latest
       - run: npm ci
       - name: Verify tag matches package.json version
         run: |
@@ -29,6 +32,7 @@ jobs:
             echo "Tag ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
             exit 1
           fi
+      # No NODE_AUTH_TOKEN needed — Trusted Publishing uses the GitHub OIDC
+      # token via id-token: write permission above. npm verifies the publish
+      # is coming from this repo's publish.yml on a tag matching v*.
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
