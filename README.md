@@ -1,14 +1,21 @@
 # prd — pull request dashboard
 
+![screenshot](./docs/screenshot-260516.png)
+
 A live terminal dashboard for GitHub PRs across all your orgs. Fresher than the web UI: it polls smart (a cheap "index" query identifies which PRs actually changed; only those get detail fetches), shows freshness in the UI so you can see it's alive, and stays out of your way otherwise.
+
+## Why not just use `gh pr list`?
+
+`gh pr list` is great for one-shot output. `prd` is for the case where you want to _leave a terminal pane open_ with live PR state — across multiple orgs, with CI/review/merge state visible at a glance, without manually refreshing. Think of it as the dashboard GitHub's web UI should be.
 
 ## Install
 
-```
+```zsh
 npm i -g @northern-information/pr-dashboard
 ```
 
 Requirements:
+
 - **Node 24.13.0** — check with `node --version`. The exact patch is pinned in `.node-version`, `.nvmrc`, and `package.json` `engines.node`; all three stay in sync. See `CLAUDE.md` for the policy.
 - **`gh` CLI** installed and authenticated — `brew install gh && gh auth login`
 
@@ -16,7 +23,7 @@ That's it. The tool re-uses your `gh` session, so there's nothing else to config
 
 ## First run
 
-```
+```zsh
 prd
 ```
 
@@ -28,27 +35,27 @@ Config lives at `~/.config/pr-dashboard/config.json`. You can edit it by hand, o
 
 ## Keys
 
-| Key | Action |
-|-----|--------|
-| `1`–`9` | switch scope tab |
-| `j` / `k` (or arrows) | move cursor |
-| `enter` / `o` | open focused PR in browser |
-| `x` | toggle failed-checks panel for focused PR |
-| `/` | filter rows |
-| `r` | force refresh |
-| `s` | open settings (toggle scopes on/off) |
-| `q` / `Ctrl+C` | quit |
+| Key                   | Action                                    |
+| --------------------- | ----------------------------------------- |
+| `1`–`9`               | switch scope tab                          |
+| `j` / `k` (or arrows) | move cursor                               |
+| `enter` / `o`         | open focused PR in browser                |
+| `x`                   | toggle failed-checks panel for focused PR |
+| `/`                   | filter rows                               |
+| `r`                   | force refresh                             |
+| `s`                   | open settings (toggle scopes on/off)      |
+| `q` / `Ctrl+C`        | quit                                      |
 
 ### Settings panel keys
 
-| Key | Action |
-|-----|--------|
-| `j` / `k` | move cursor |
+| Key           | Action               |
+| ------------- | -------------------- |
+| `j` / `k`     | move cursor          |
 | `space` / `x` | toggle focused scope |
-| `a` | enable all |
-| `n` | disable all |
-| `enter` | save and close |
-| `esc` | cancel |
+| `a`           | enable all           |
+| `n`           | disable all          |
+| `enter`       | save and close       |
+| `esc`         | cancel               |
 
 ## Columns
 
@@ -80,14 +87,14 @@ Config lives at `~/.config/pr-dashboard/config.json`. You can edit it by hand, o
 ```
 
 - `enabledScopes` — org slugs (or your user login) that should appear as tabs.
-- `disabledScopes` — scopes you've explicitly hidden. Newly-discovered orgs default to *enabled* unless they appear here.
+- `disabledScopes` — scopes you've explicitly hidden. Newly-discovered orgs default to _enabled_ unless they appear here.
 - Both lists are managed by the in-app settings panel. Editing the file by hand also works.
 
 Each scope renders as a single GitHub search query: `is:open is:pr involves:@me <user-or-org>:<key> archived:false` — meaning authored, review-requested, mentioned, or assigned.
 
 ## Develop
 
-```
+```zsh
 git clone git@github.com:northern-information/pr-dashboard.git
 cd pr-dashboard
 npm ci           # reproducible install from package-lock.json
@@ -99,7 +106,7 @@ Use `npm install` only when you're changing `package.json` (adding, removing, or
 
 Scripts:
 
-```
+```zsh
 npm run dev            # run via tsx
 npm run test           # vitest
 npm run test:coverage  # vitest with v8 coverage report
@@ -114,7 +121,7 @@ Coverage thresholds: 90% statements / 80% branches / 90% functions / 90% lines o
 
 Maintainer notes — direct pushes to `main` are blocked by branch protection, so releases go through a PR:
 
-```
+```zsh
 git switch -c chore/vX.Y.Z
 npm version patch --no-git-tag-version   # bumps package.json (or minor / major)
 git commit -am "chore: vX.Y.Z"
@@ -130,14 +137,11 @@ git push origin vX.Y.Z
 ```
 
 Pushing the tag triggers `.github/workflows/publish.yml`, which:
+
 1. Verifies the tag matches `v[0-9]+.[0-9]+.[0-9]+` (semver) — also enforced by a tag-protection ruleset on the GitHub side
 2. Verifies the tag matches `package.json` version
 3. Publishes to npm via Trusted Publishing (OIDC; no `NPM_TOKEN`)
 4. Signs a provenance attestation linking the npm release back to this commit
-
-## Why not just use `gh pr list`?
-
-`gh pr list` is great for one-shot output. `prd` is for the case where you want to *leave a terminal pane open* with live PR state — across multiple orgs, with CI/review/merge state visible at a glance, without manually refreshing. Think of it as the dashboard GitHub's web UI should be.
 
 ## License
 
