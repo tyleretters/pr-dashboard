@@ -15,7 +15,7 @@ try {
   // tsx >= 4 ships its loader at `tsx/esm`.
   tsxLoader = require.resolve('tsx/esm')
 } catch (err) {
-  process.stderr.write('prd: could not locate `tsx`. Try reinstalling: `npm i -g pr-dashboard`\n')
+  process.stderr.write('prd: could not locate `tsx`. Try reinstalling: `npm i -g @northern-information/pr-dashboard`\n')
   process.stderr.write(String(err) + '\n')
   process.exit(2)
 }
