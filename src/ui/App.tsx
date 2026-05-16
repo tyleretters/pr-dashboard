@@ -27,11 +27,12 @@ interface Props {
   viewer: ViewerScopes
   firstRun: boolean
   update: UpdateInfo | null
+  version: string
 }
 
 const FLASH_MS = 1200
 
-export const App: React.FC<Props> = ({ config: initialConfig, configPath, viewer, firstRun, update }) => {
+export const App: React.FC<Props> = ({ config: initialConfig, configPath, viewer, firstRun, update, version }) => {
   const { exit } = useApp()
   const { stdout } = useStdout()
 
@@ -299,7 +300,7 @@ export const App: React.FC<Props> = ({ config: initialConfig, configPath, viewer
           }}
         />
       ) : null}
-      <StatusFooter lastTickAt={lastTickAt} nextTickAt={nextTickAt} rateLimit={rateLimit} now={now} loading={loading} />
+      <StatusFooter lastTickAt={lastTickAt} nextTickAt={nextTickAt} rateLimit={rateLimit} now={now} loading={loading} version={version} />
       <UpdateBanner update={update} />
     </Box>
   )

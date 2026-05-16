@@ -93,7 +93,7 @@ const main = async (): Promise<void> => {
   })
 
   const { waitUntilExit } = render(
-    <App config={config} configPath={path} viewer={viewer} firstRun={createdDefault} update={update} />,
+    <App config={config} configPath={path} viewer={viewer} firstRun={createdDefault} update={update} version={pkg.version} />,
     { exitOnCtrlC: true }
   )
   try {

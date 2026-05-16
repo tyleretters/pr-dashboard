@@ -9,6 +9,7 @@ interface Props {
   rateLimit: RateLimit | null
   now: number
   loading: boolean
+  version: string
 }
 
 const fmtAgo = (ts: number | null, now: number): string => {
@@ -25,14 +26,14 @@ const fmtIn = (ts: number | null, now: number): string => {
 
 const KEYBINDS = '/filter · r refresh · enter open · x checks · s settings · q quit'
 
-export const StatusFooter: React.FC<Props> = ({ lastTickAt, nextTickAt, rateLimit, now, loading }) => {
+export const StatusFooter: React.FC<Props> = ({ lastTickAt, nextTickAt, rateLimit, now, loading, version }) => {
   return (
     <Box flexDirection="column" paddingX={1}>
       <Box>
         <Text dimColor>
           last poll {fmtAgo(lastTickAt, now)} ago · next in {fmtIn(nextTickAt, now)} · rate{' '}
           {rateLimit ? `${String(rateLimit.remaining)}/${String(rateLimit.limit)}` : '?'}
-          {loading ? ' · polling…' : ''}
+          {loading ? ' · polling…' : ''} · v{version}
         </Text>
       </Box>
       <Box>
