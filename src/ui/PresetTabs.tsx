@@ -12,13 +12,12 @@ export const PresetTabs: React.FC<Props> = ({ presets, active }) => {
       {presets.map((p, i) => (
         <Box key={p.key} marginRight={1}>
           <Text dimColor>[{String(i + 1)}]</Text>
-          <Text color={p.key === active ? 'cyan' : undefined} bold={p.key === active}>
+          <Text color={p.key === active ? '#F51700' : undefined}>
             {' '}
             {p.label}
           </Text>
         </Box>
       ))}
-      <Text dimColor> · /filter · r refresh · enter checks · o open · c copy · q quit</Text>
     </Box>
   )
 }

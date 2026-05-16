@@ -1,13 +1,26 @@
 #!/usr/bin/env node
+// Bootstrap shim: spawn node with tsx as an ESM loader so the entry file can be .tsx.
+// Resolving tsx via createRequire lets us find it regardless of pnpm/npm install layout.
 import { spawn } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join } from 'node:path'
+import { createRequire } from 'node:module'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const entry = join(here, '..', 'src', 'main.tsx')
-const tsxBin = join(here, '..', 'node_modules', '.bin', 'tsx')
+const require = createRequire(import.meta.url)
 
-const child = spawn(tsxBin, [entry, ...process.argv.slice(2)], {
+let tsxLoader
+try {
+  // tsx >= 4 ships its loader at `tsx/esm`.
+  tsxLoader = require.resolve('tsx/esm')
+} catch (err) {
+  process.stderr.write('prd: could not locate `tsx`. Try reinstalling: `npm i -g pr-dashboard`\n')
+  process.stderr.write(String(err) + '\n')
+  process.exit(2)
+}
+
+const child = spawn(process.execPath, ['--import', pathToFileURL(tsxLoader).href, entry, ...process.argv.slice(2)], {
   stdio: 'inherit',
   env: process.env,
 })

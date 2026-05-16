@@ -52,15 +52,23 @@ interface RowProps {
   now: number
 }
 
-const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth, now }) => {
+const PRRowImpl: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth, now }) => {
   const ageDays = daysSince(pr.createdAt, now)
   const stale = ageDays > 7
-  const bg = flashing ? 'magenta' : isCursor ? 'blue' : undefined
-  const baseColor = bg ? 'white' : undefined
+  // Flash on detail change keeps the magenta background so the change is
+  // visually distinct from the normal cursor highlight.
+  const flashBg = flashing ? 'magenta' : undefined
+  // When cursor and not flashing: tint text red. When flashing: white on magenta.
+  const cursorTint = isCursor && !flashing ? '#F51700' : undefined
+  const flashFg = flashing ? 'white' : undefined
+  const baseTextColor = flashFg ?? cursorTint ?? 'gray'
+  const titleColor = flashFg ?? cursorTint
   return (
     <Box>
       <Box width={2} flexShrink={0}>
-        <Text color={isCursor ? 'cyan' : undefined}>{isCursor ? '›' : ' '}</Text>
+        <Text color={isCursor ? '#F51700' : undefined} bold={isCursor}>
+          {isCursor ? '›' : ' '}
+        </Text>
       </Box>
       {columns.map(col => {
         const spec = COLUMN_SPECS[col]
@@ -69,7 +77,7 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
           case 'repo':
             return (
               <Cell key={col} width={width}>
-                <Text backgroundColor={bg} color={baseColor ?? 'gray'}>
+                <Text backgroundColor={flashBg} color={baseTextColor} bold={isCursor}>
                   {truncate(pr.repoFullName, width)}
                 </Text>
               </Cell>
@@ -77,7 +85,7 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
           case 'number':
             return (
               <Cell key={col} width={width}>
-                <Text backgroundColor={bg} color={baseColor ?? 'gray'}>
+                <Text backgroundColor={flashBg} color={baseTextColor} bold={isCursor}>
                   {truncate(`#${String(pr.number)}`, width)}
                 </Text>
               </Cell>
@@ -85,7 +93,7 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
           case 'title':
             return (
               <Cell key={col} width={width}>
-                <Text backgroundColor={bg} color={baseColor} bold={pr.isDraft ? false : undefined}>
+                <Text backgroundColor={flashBg} color={titleColor} bold={isCursor && !pr.isDraft}>
                   {truncate(cleanTitle(pr.title), width)}
                 </Text>
               </Cell>
@@ -94,7 +102,7 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
             const g = ciGlyph(pr.ciState)
             return (
               <Cell key={col} width={width}>
-                <Text backgroundColor={bg} color={g.color}>
+                <Text backgroundColor={flashBg} color={g.color} bold={isCursor}>
                   {truncate(g.char, width)}
                 </Text>
               </Cell>
@@ -104,7 +112,7 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
             const g = reviewGlyph(pr.reviewDecision, pr.reviewRequestCount)
             return (
               <Cell key={col} width={width}>
-                <Text backgroundColor={bg} color={g.color}>
+                <Text backgroundColor={flashBg} color={g.color} bold={isCursor}>
                   {truncate(g.char, width)}
                 </Text>
               </Cell>
@@ -114,7 +122,7 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
             const g = mergeGlyph(pr.mergeable, pr.mergeStateStatus, pr.isDraft)
             return (
               <Cell key={col} width={width}>
-                <Text backgroundColor={bg} color={g.color}>
+                <Text backgroundColor={flashBg} color={g.color} bold={isCursor}>
                   {truncate(g.char, width)}
                 </Text>
               </Cell>
@@ -123,7 +131,11 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
           case 'age':
             return (
               <Cell key={col} width={width}>
-                <Text backgroundColor={bg} color={stale ? 'red' : (baseColor ?? 'gray')} bold={stale}>
+                <Text
+                  backgroundColor={flashBg}
+                  color={stale ? 'red' : baseTextColor}
+                  bold={stale || isCursor}
+                >
                   {truncate(`${String(ageDays)}d`, width)}
                 </Text>
               </Cell>
@@ -131,7 +143,7 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
           case 'updated':
             return (
               <Cell key={col} width={width}>
-                <Text backgroundColor={bg} color={baseColor ?? 'gray'}>
+                <Text backgroundColor={flashBg} color={baseTextColor} bold={isCursor}>
                   {truncate(relativeTime(pr.updatedAt, now), width)}
                 </Text>
               </Cell>
@@ -141,6 +153,35 @@ const PRRow: React.FC<RowProps> = ({ pr, columns, isCursor, flashing, flexWidth,
     </Box>
   )
 }
+
+/**
+ * Row-level memo: skip re-render if the displayed strings would be identical.
+ * Crucially, we compare the *rendered* relative-time string (e.g. "23h ago"), not
+ * the raw `now` number. That means a 1Hz clock tick produces no row redraws unless
+ * a row actually crossed a time boundary — which is what eliminates flicker.
+ */
+const PRRow = React.memo(PRRowImpl, (prev, next) => {
+  if (prev.isCursor !== next.isCursor) return false
+  if (prev.flashing !== next.flashing) return false
+  if (prev.flexWidth !== next.flexWidth) return false
+  if (prev.columns !== next.columns) return false
+  const a = prev.pr
+  const b = next.pr
+  if (a.id !== b.id) return false
+  if (a.title !== b.title) return false
+  if (a.ciState !== b.ciState) return false
+  if (a.reviewDecision !== b.reviewDecision) return false
+  if (a.mergeable !== b.mergeable) return false
+  if (a.mergeStateStatus !== b.mergeStateStatus) return false
+  if (a.isDraft !== b.isDraft) return false
+  if (a.reviewRequestCount !== b.reviewRequestCount) return false
+  // Time-derived strings: only re-render when the *displayed* relative-time
+  // string actually changes (e.g. "59s ago" → "1m ago"). Same `now` clock tick
+  // that doesn't cross a boundary is a no-op.
+  if (relativeTime(a.updatedAt, prev.now) !== relativeTime(b.updatedAt, next.now)) return false
+  if (daysSince(a.createdAt, prev.now) !== daysSince(b.createdAt, next.now)) return false
+  return true
+})
 
 export const PRTable: React.FC<Props> = ({ prs, columns, cursor, now, flashUntil, terminalWidth }) => {
   const flexWidth = computeFlexWidth(terminalWidth, columns)

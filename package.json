@@ -1,11 +1,39 @@
 {
   "name": "pr-dashboard",
   "version": "0.1.0",
-  "private": true,
-  "description": "Live terminal dashboard for GitHub PRs across orgs",
+  "description": "Live terminal dashboard for GitHub PRs — fresher than the web UI, two-tier polling, scoped by org",
   "type": "module",
   "bin": {
     "prd": "bin/prd"
+  },
+  "files": [
+    "bin",
+    "src",
+    "tsconfig.json",
+    "README.md"
+  ],
+  "keywords": [
+    "github",
+    "pull-requests",
+    "prs",
+    "dashboard",
+    "tui",
+    "ink",
+    "cli",
+    "gh"
+  ],
+  "homepage": "https://github.com/northern-information/pr-dashboard",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/northern-information/pr-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/northern-information/pr-dashboard/issues"
+  },
+  "license": "MIT",
+  "author": "Tyler Etters",
+  "engines": {
+    "node": ">=22.0.0"
   },
   "scripts": {
     "dev": "tsx src/main.tsx",
@@ -16,16 +44,15 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "npm run typecheck && npm run lint && npm run test"
-  },
-  "engines": {
-    "node": "24.13.0"
+    "verify": "npm run typecheck && npm run lint && npm run test",
+    "prepublishOnly": "npm run verify"
   },
   "dependencies": {
     "ink": "5.2.1",
     "ink-spinner": "5.0.0",
     "ink-text-input": "6.0.0",
     "react": "18.3.1",
+    "tsx": "4.21.0",
     "zod": "3.24.1"
   },
   "devDependencies": {
@@ -38,7 +65,6 @@
     "eslint-plugin-react-hooks": "7.0.1",
     "globals": "17.4.0",
     "prettier": "3.8.1",
-    "tsx": "4.21.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.57.2",
     "vitest": "3.2.4"

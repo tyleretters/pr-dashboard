@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { execFile } from 'node:child_process'
-import { Box, useApp, useInput, useStdout } from 'ink'
+import { Box, Text, useApp, useInput, useStdout } from 'ink'
 
+import { saveConfig } from '@/config/loader.ts'
+import { buildScopes, scopeToFilter } from '@/config/schema.ts'
 import { cleanTitle } from '@/format/status.ts'
 import { startScheduler } from '@/poll/scheduler.ts'
 import { FailedChecks } from '@/ui/FailedChecks.tsx'
@@ -9,27 +11,36 @@ import { FilterBar } from '@/ui/FilterBar.tsx'
 import { Header } from '@/ui/Header.tsx'
 import { PresetTabs } from '@/ui/PresetTabs.tsx'
 import { PRTable } from '@/ui/PRTable.tsx'
-import type { Config } from '@/config/schema.ts'
+import { SettingsPanel } from '@/ui/SettingsPanel.tsx'
+import { StatusFooter } from '@/ui/StatusFooter.tsx'
+import type { Config, Scope } from '@/config/schema.ts'
+import type { ViewerScopes } from '@/github/queries/orgsQuery.ts'
 import type { DetailedPR } from '@/github/types.ts'
 import type { PollTick, SchedulerHandle } from '@/poll/scheduler.ts'
 import type { RateLimit } from '@/github/client.ts'
 
 interface Props {
   config: Config
+  configPath: string
+  viewer: ViewerScopes
+  firstRun: boolean
 }
 
 const FLASH_MS = 1200
 
-export const App: React.FC<Props> = ({ config }) => {
+export const App: React.FC<Props> = ({ config: initialConfig, configPath, viewer, firstRun }) => {
   const { exit } = useApp()
   const { stdout } = useStdout()
-  const presetKeys = useMemo(() => Object.keys(config.presets), [config.presets])
-  const initialPreset = presetKeys.includes(config.defaultPreset) ? config.defaultPreset : presetKeys[0]
-  if (!initialPreset) {
-    throw new Error('config has no presets defined')
-  }
 
-  const [activePreset, setActivePreset] = useState(initialPreset)
+  const [config, setConfig] = useState(initialConfig)
+  const initialScopes = useMemo(
+    () => buildScopes(viewer.login, viewer.orgs, initialConfig.enabledScopes, initialConfig.disabledScopes),
+    [viewer, initialConfig.enabledScopes, initialConfig.disabledScopes]
+  )
+  const [scopes, setScopes] = useState(initialScopes)
+  const enabledScopes = useMemo(() => scopes.filter(s => s.enabled), [scopes])
+  const [activeKey, setActiveKey] = useState<string | null>(enabledScopes[0]?.key ?? null)
+
   const [prs, setPrs] = useState<DetailedPR[]>([])
   const [indexedCount, setIndexedCount] = useState(0)
   const [rateLimit, setRateLimit] = useState<RateLimit | null>(null)
@@ -42,6 +53,9 @@ export const App: React.FC<Props> = ({ config }) => {
   const [showChecks, setShowChecks] = useState(false)
   const [filterMode, setFilterMode] = useState(false)
   const [filterText, setFilterText] = useState('')
+  // Auto-open settings on the very first launch so the user picks scopes
+  // before the dashboard starts polling.
+  const [settingsMode, setSettingsMode] = useState(firstRun)
   const [flashUntil, setFlashUntil] = useState(new Map<string, number>())
 
   const schedulerRef = useRef<SchedulerHandle | null>(null)
@@ -67,14 +81,15 @@ export const App: React.FC<Props> = ({ config }) => {
     [config.indexIntervalMs]
   )
 
-  // Boot scheduler with the active preset
+  // Boot/refresh scheduler whenever the active scope changes.
   useEffect(() => {
-    const preset = config.presets[activePreset]
-    if (!preset) return
+    if (!activeKey) return
+    const scope = scopes.find(s => s.key === activeKey)
+    if (!scope) return
     setLoading(true)
     setError(null)
     const handle = startScheduler({
-      scope: { presetKey: activePreset, filters: preset.filters },
+      scope: { presetKey: scope.key, filters: [scopeToFilter(scope)] },
       indexIntervalMs: config.indexIntervalMs,
       detailBatchSize: config.detailMaxBatchSize,
       onTick: handleTick,
@@ -83,17 +98,31 @@ export const App: React.FC<Props> = ({ config }) => {
     return () => {
       handle.stop()
     }
-  }, [activePreset, config, handleTick])
+  }, [activeKey, config.indexIntervalMs, config.detailMaxBatchSize, handleTick, scopes])
 
-  // Tick the "now" clock so relative-time strings update visibly
+  // Tick the "now" clock so relative-time strings update visibly. 1Hz is enough —
+  // the UI only displays whole seconds, and a faster tick triggers re-renders
+  // that can cause terminal flicker.
   useEffect(() => {
     const id = setInterval(() => {
       setNow(Date.now())
-    }, 500)
+    }, 1000)
     return () => {
       clearInterval(id)
     }
   }, [])
+
+  // Track terminal size and react to resizes so the sticky footer stays pinned.
+  const [terminalSize, setTerminalSize] = useState({ width: stdout.columns ?? 120, height: stdout.rows ?? 40 })
+  useEffect(() => {
+    const onResize = (): void => {
+      setTerminalSize({ width: stdout.columns ?? 120, height: stdout.rows ?? 40 })
+    }
+    stdout.on('resize', onResize)
+    return () => {
+      stdout.off('resize', onResize)
+    }
+  }, [stdout])
 
   const filtered = useMemo(() => {
     if (!filterText) return prs
@@ -114,18 +143,42 @@ export const App: React.FC<Props> = ({ config }) => {
     }
   }, [filtered.length, cursor])
 
-  const switchPreset = useCallback(
+  const switchScope = useCallback(
     (key: string) => {
-      if (key === activePreset || !config.presets[key]) return
-      setActivePreset(key)
+      if (key === activeKey) return
+      const scope = scopes.find(s => s.key === key && s.enabled)
+      if (!scope) return
+      setActiveKey(key)
       setPrs([])
       setCursor(0)
       setShowChecks(false)
     },
-    [activePreset, config.presets]
+    [activeKey, scopes]
+  )
+
+  const handleSettingsSave = useCallback(
+    (next: Scope[]) => {
+      setScopes(next)
+      const enabledKeys = next.filter(s => s.enabled).map(s => s.key)
+      const disabledKeys = next.filter(s => !s.enabled).map(s => s.key)
+      const nextConfig: Config = { ...config, enabledScopes: enabledKeys, disabledScopes: disabledKeys }
+      setConfig(nextConfig)
+      void saveConfig(nextConfig, configPath)
+      // If the active scope got disabled, jump to the first enabled scope.
+      const stillActive = next.find(s => s.key === activeKey && s.enabled)
+      if (!stillActive) {
+        const fallback = next.find(s => s.enabled)
+        setActiveKey(fallback?.key ?? null)
+        setPrs([])
+        setCursor(0)
+      }
+      setSettingsMode(false)
+    },
+    [config, configPath, activeKey]
   )
 
   useInput((input, key) => {
+    if (settingsMode) return // settings panel handles its own keys
     if (filterMode) {
       if (key.escape) {
         setFilterMode(false)
@@ -139,6 +192,10 @@ export const App: React.FC<Props> = ({ config }) => {
     }
     if (input === 'q') {
       exit()
+      return
+    }
+    if (input === 's') {
+      setSettingsMode(true)
       return
     }
     if (input === '/') {
@@ -158,11 +215,7 @@ export const App: React.FC<Props> = ({ config }) => {
       setCursor(c => Math.max(0, c - 1))
       return
     }
-    if (key.return) {
-      setShowChecks(s => !s)
-      return
-    }
-    if (input === 'o') {
+    if (key.return || input === 'o') {
       const focused = filtered[cursor]
       if (focused) {
         execFile('open', [focused.url], () => {
@@ -171,47 +224,57 @@ export const App: React.FC<Props> = ({ config }) => {
       }
       return
     }
-    if (input === 'c') {
-      const focused = filtered[cursor]
-      if (focused) {
-        const child = execFile('pbcopy', () => {
-          /* fire and forget */
-        })
-        child.stdin?.end(focused.url)
-      }
+    if (input === 'x') {
+      setShowChecks(s => !s)
       return
     }
     const presetIndex = Number.parseInt(input, 10)
-    if (!Number.isNaN(presetIndex) && presetIndex >= 1 && presetIndex <= presetKeys.length) {
-      const key = presetKeys[presetIndex - 1]
-      if (key) switchPreset(key)
+    if (!Number.isNaN(presetIndex) && presetIndex >= 1 && presetIndex <= enabledScopes.length) {
+      const target = enabledScopes[presetIndex - 1]
+      if (target) switchScope(target.key)
     }
   })
 
-  const presetTabs = presetKeys.map(k => {
-    const p = config.presets[k]
-    return { key: k, label: p?.label ?? k }
-  })
-  const activeLabel = config.presets[activePreset]?.label ?? activePreset
-  const terminalWidth = stdout.columns ?? 120
+  const tabs = enabledScopes.map(s => ({ key: s.key, label: s.label }))
+  const activeLabel = enabledScopes.find(s => s.key === activeKey)?.label ?? '—'
+  const terminalWidth = terminalSize.width
   const focused = filtered[cursor] ?? null
+
+  if (enabledScopes.length === 0) {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Box marginBottom={1}>
+          <Text color="#F51700" bold>
+            No scopes enabled.
+          </Text>
+        </Box>
+        <Text>Press </Text>
+        <Text bold>s</Text>
+        <Text> to open settings and toggle on at least one scope.</Text>
+        {settingsMode ? (
+          <SettingsPanel
+            scopes={scopes}
+            onSave={handleSettingsSave}
+            onCancel={() => {
+              setSettingsMode(false)
+            }}
+          />
+        ) : null}
+      </Box>
+    )
+  }
 
   return (
     <Box flexDirection="column">
       <Header
         presetLabel={activeLabel}
-        presetKey={activePreset}
+        presetKey={activeKey ?? ''}
         totalCount={indexedCount}
         visibleCount={filtered.length}
-        lastTickAt={lastTickAt}
-        nextTickAt={nextTickAt}
-        rateLimit={rateLimit}
-        now={now}
-        loading={loading}
         error={error}
         filterText={filterText}
       />
-      <PresetTabs presets={presetTabs} active={activePreset} />
+      <PresetTabs presets={tabs} active={activeKey ?? ''} />
       <PRTable prs={filtered} columns={config.columns} cursor={cursor} now={now} flashUntil={flashUntil} terminalWidth={terminalWidth} />
       {showChecks ? <FailedChecks pr={focused} /> : null}
       {filterMode ? (
@@ -223,6 +286,16 @@ export const App: React.FC<Props> = ({ config }) => {
           }}
         />
       ) : null}
+      {settingsMode ? (
+        <SettingsPanel
+          scopes={scopes}
+          onSave={handleSettingsSave}
+          onCancel={() => {
+            setSettingsMode(false)
+          }}
+        />
+      ) : null}
+      <StatusFooter lastTickAt={lastTickAt} nextTickAt={nextTickAt} rateLimit={rateLimit} now={now} loading={loading} />
     </Box>
   )
 }

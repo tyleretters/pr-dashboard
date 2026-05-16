@@ -28,3 +28,8 @@ export const loadConfig = async (path: string = CONFIG_PATH): Promise<LoadedConf
     throw err
   }
 }
+
+export const saveConfig = async (config: Config, path: string = CONFIG_PATH): Promise<void> => {
+  await mkdir(dirname(path), { recursive: true })
+  await writeFile(path, JSON.stringify(config, null, 2) + '\n', 'utf8')
+}
