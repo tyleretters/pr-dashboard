@@ -2,8 +2,8 @@ import React from 'react'
 import { Box, Text } from 'ink'
 
 interface Props {
-  presetLabel: string
-  presetKey: string
+  scopeLabel: string
+  scopeKey: string
   totalCount: number
   visibleCount: number
   error: string | null
@@ -11,8 +11,8 @@ interface Props {
 }
 
 export const Header: React.FC<Props> = ({
-  presetLabel,
-  presetKey,
+  scopeLabel,
+  scopeKey,
   totalCount,
   visibleCount,
   error,
@@ -26,8 +26,8 @@ export const Header: React.FC<Props> = ({
           prd
         </Text>
         <Text> · </Text>
-        <Text bold>{presetLabel}</Text>
-        <Text dimColor> ({presetKey})</Text>
+        <Text bold>{scopeLabel}</Text>
+        <Text dimColor> ({scopeKey})</Text>
         <Text> · </Text>
         <Text>{count} PRs</Text>
       </Box>

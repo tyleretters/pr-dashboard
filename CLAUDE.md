@@ -27,7 +27,7 @@ Three layers, kept separate:
 
 - **`src/ui/`** — Ink components
   - `App.tsx` — top-level, wires scheduler + keybinds + settings
-  - `Header.tsx`, `PresetTabs.tsx`, `PRTable.tsx`, `StatusFooter.tsx`, `SettingsPanel.tsx`, `FilterBar.tsx`, `FailedChecks.tsx`, `UpdateBanner.tsx`
+  - `Header.tsx`, `ScopeTabs.tsx`, `PRTable.tsx`, `StatusFooter.tsx`, `SettingsPanel.tsx`, `FilterBar.tsx`, `FailedChecks.tsx`, `UpdateBanner.tsx`
 
 - **`src/format/`** — pure rendering helpers (`relativeTime`, `cleanTitle`, status glyphs)
 
@@ -79,7 +79,7 @@ The whole project ships as TypeScript source — no build step. `tsx` is a *runt
 
 ## UI conventions
 
-- Brand color: `#F51700` (matches the user's zsh prompt). Used for the header border, the bold `prd` label, the active preset tab, the row cursor.
+- Brand color: `#F51700` (matches the user's zsh prompt). Used for the header border, the bold `prd` label, the active scope tab, the row cursor.
 - Sentence case for all prose. Title case for in-app labels (button text, headings).
 - The footer (`StatusFooter`) shows `last poll · next · rate · polling…` then a keybind strip, both dim. It's *not* sticky-bottom-of-terminal — that caused flicker. It sits one line below the table.
 - Row flicker is avoided by memoizing `PRRow` with a comparator that diffs the *rendered* relative-time string, not the raw `now` clock value.

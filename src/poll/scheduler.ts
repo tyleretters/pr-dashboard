@@ -5,12 +5,12 @@ import type { RateLimit } from '../github/client.ts'
 import type { DetailedPR, IndexedPR } from '../github/types.ts'
 
 export interface ScopeQuery {
-  presetKey: string
+  scopeKey: string
   filters: string[]
 }
 
 export interface PollTick {
-  presetKey: string
+  scopeKey: string
   prs: DetailedPR[]
   indexedCount: number
   changedIds: Set<string>
@@ -56,7 +56,7 @@ export const runOneTick = async (
       if (rateLimit) lastRateLimit = rateLimit
     }
 
-    // dedupe by id (a PR can match multiple filters in one preset)
+    // dedupe by id (a PR can match multiple filters in one scope)
     const seen = new Set<string>()
     allIndexed = allIndexed.filter(p => {
       if (seen.has(p.id)) return false
@@ -78,7 +78,7 @@ export const runOneTick = async (
     for (const [k, v] of next) cache.set(k, v)
 
     return {
-      presetKey: opts.scope.presetKey,
+      scopeKey: opts.scope.scopeKey,
       prs: Array.from(cache.values()),
       indexedCount: allIndexed.length,
       changedIds,
@@ -90,7 +90,7 @@ export const runOneTick = async (
     }
   } catch (err) {
     return {
-      presetKey: opts.scope.presetKey,
+      scopeKey: opts.scope.scopeKey,
       prs: Array.from(cache.values()),
       indexedCount: allIndexed.length,
       changedIds: new Set(),
