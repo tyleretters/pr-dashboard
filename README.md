@@ -110,14 +110,28 @@ Coverage thresholds: 90% statements / 80% branches / 90% functions / 90% lines o
 
 ## Release
 
-Maintainer notes — releases happen via `git` tags and the GitHub Actions publish workflow:
+Maintainer notes — direct pushes to `main` are blocked by branch protection, so releases go through a PR:
 
 ```
-npm version patch       # 0.1.1 → 0.1.2 (or minor / major)
-git push --follow-tags  # pushes commit + tag, triggers publish workflow
+git switch -c chore/vX.Y.Z
+npm version patch --no-git-tag-version   # bumps package.json (or minor / major)
+git commit -am "chore: vX.Y.Z"
+git push -u origin chore/vX.Y.Z
+gh pr create --fill --base main
+# wait for CI green, then:
+gh pr merge --squash --delete-branch
+
+# sync local main, then tag from it
+git switch main && git pull --ff-only
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
-Tags must match `v[0-9]+.[0-9]+.[0-9]+` (semver). GitHub rulesets enforce this on push; the publish workflow re-checks it before running `npm publish`. Auth uses npm Trusted Publishing (OIDC) — no `NPM_TOKEN` to rotate.
+Pushing the tag triggers `.github/workflows/publish.yml`, which:
+1. Verifies the tag matches `v[0-9]+.[0-9]+.[0-9]+` (semver) — also enforced by a tag-protection ruleset on the GitHub side
+2. Verifies the tag matches `package.json` version
+3. Publishes to npm via Trusted Publishing (OIDC; no `NPM_TOKEN`)
+4. Signs a provenance attestation linking the npm release back to this commit
 
 ## Why not just use `gh pr list`?
 
