@@ -90,10 +90,12 @@ Each scope renders as a single GitHub search query: `is:open is:pr involves:@me 
 ```
 git clone git@github.com:northern-information/pr-dashboard.git
 cd pr-dashboard
-npm install
-npm link        # makes `prd` resolve to your local checkout
+npm ci           # reproducible install from package-lock.json
+npm link         # makes `prd` resolve to your local checkout
 prd
 ```
+
+Use `npm install` only when you're changing `package.json` (adding, removing, or bumping a dep). For everything else — initial clone, switching branches, CI — `npm ci` is faster and never silently mutates the lockfile.
 
 Scripts:
 
