@@ -1,5 +1,11 @@
 # prd — pull request dashboard
 
+[![npm version](https://img.shields.io/npm/v/@northern-information/pr-dashboard.svg)](https://www.npmjs.com/package/@northern-information/pr-dashboard)
+[![npm downloads](https://img.shields.io/npm/dw/@northern-information/pr-dashboard.svg)](https://www.npmjs.com/package/@northern-information/pr-dashboard)
+[![CI](https://github.com/northern-information/pr-dashboard/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/northern-information/pr-dashboard/actions/workflows/ci.yml)
+[![publish](https://github.com/northern-information/pr-dashboard/actions/workflows/publish.yml/badge.svg)](https://github.com/northern-information/pr-dashboard/actions/workflows/publish.yml)
+[![license: MIT](https://img.shields.io/npm/l/@northern-information/pr-dashboard.svg)](https://github.com/northern-information/pr-dashboard/blob/main/LICENSE)
+
 ![screenshot](./docs/screenshot-260516.png)
 
 A live terminal dashboard for GitHub PRs across all your orgs. Fresher than the web UI: it polls smart (a cheap "index" query identifies which PRs actually changed; only those get detail fetches), shows freshness in the UI so you can see it's alive, and stays out of your way otherwise.
