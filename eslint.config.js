@@ -5,7 +5,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-export default defineConfig(globalIgnores(['node_modules', 'dist', 'coverage', 'eslint.config.js', 'prettier.config.js', 'vitest.config.ts', 'bin']), {
+export default defineConfig(globalIgnores(['node_modules', 'dist', 'coverage', '.claude', 'eslint.config.js', 'prettier.config.js', 'vitest.config.ts', 'bin']), {
   settings: { react: { version: '18' } },
   files: ['**/*.{ts,tsx}'],
   extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],

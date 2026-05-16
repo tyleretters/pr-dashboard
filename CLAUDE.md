@@ -78,9 +78,10 @@ The whole project ships as TypeScript source — no build step. `tsx` is a *runt
 Vitest. Tests in `tests/`. Each module's invariants:
 
 - `tests/cache.test.ts` — `diffForDetailFetch` returns changed ids only; `mergeSnapshot` drops removed PRs and preserves detail for unchanged ones.
-- `tests/scheduler.test.ts` — first tick fetches all details, second tick fetches none if unchanged, only changed ids on later ticks. Detail batching respects `detailMaxBatchSize`. Errors are caught.
-- `tests/config.test.ts` — schema validation, defaults written on first run, save/reload round-trip, `buildScopes` defaults newly-discovered scopes to on, respects `disabledScopes`, alphabetizes.
-- `tests/relativeTime.test.ts` — seconds/minutes/hours/days bands.
+- `tests/scheduler.test.ts` — `runOneTick` invariants (first tick fetches all details, second tick fetches none if unchanged, only changed ids on later ticks, detail batching respects `detailMaxBatchSize`, errors are caught) plus `startScheduler` lifecycle (emits immediately, re-ticks at the interval, stop halts it, `forceRefresh` triggers an extra tick, `setScope` clears cache and re-ticks).
+- `tests/config.test.ts` — schema validation, defaults written on first run, save/reload round-trip, `buildScopes` defaults newly-discovered scopes to on, respects `disabledScopes`, alphabetizes, marks the user scope, drops scopes that fell out of viewer discovery; `scopeToFilter` emits the correct `user:`/`org:` qualifier.
+- `tests/relativeTime.test.ts` — seconds/minutes/hours/days/months/years bands and invalid-input fallback.
+- `tests/status.test.ts` — `ciGlyph`, `reviewGlyph`, `mergeGlyph` color/char tables and `cleanTitle` conventional-commit prefix stripping.
 
 When adding a new feature, add or update the relevant test. `npm run verify` is the CI gate.
 
@@ -109,11 +110,21 @@ Admin (repo owner) can bypass any of these for emergency hotfixes. Use sparingly
 
 ## Publishing
 
-`.github/workflows/publish.yml` publishes to npm on every tag push matching `v*`. The release flow:
+`.github/workflows/publish.yml` publishes to npm on every tag push matching `v*`. Because branch protection blocks direct pushes to `main`, the release flow is PR-then-tag:
 
 ```
-npm version patch       # 0.1.1 → 0.1.2, updates package.json and creates a git tag
-git push --follow-tags  # pushes commit + tag, which fires the workflow
+git switch -c chore/vX.Y.Z
+npm version patch --no-git-tag-version   # bump package.json without auto-tagging
+git commit -am "chore: vX.Y.Z"
+git push -u origin chore/vX.Y.Z
+gh pr create --fill --base main
+# CI must go green, then squash-merge:
+gh pr merge --squash --delete-branch
+
+# sync local main, tag from the merged commit:
+git switch main && git pull --ff-only
+git tag vX.Y.Z
+git push origin vX.Y.Z   # this push triggers the publish workflow
 ```
 
 The workflow:
